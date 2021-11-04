@@ -1,0 +1,48 @@
+---
+title: "my_sleep_time"
+author: "Daniel Nguyen"
+date: "9/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Take a look at my sleep time last month
+
+### Solution
+
+``` {r}
+set.seed(5)
+# Data creation
+aug_date <- seq.Date(Sys.Date()-31, by='day', length.out = 31)
+sleep_time <- round(rnorm(31, mean=7, sd=2))
+df <- data.frame(Dates = aug_date, sleep_time= sleep_time)
+
+
+# What date did I sleep most
+most_sleeping_date = df$Dates[df$sleep_time==max(df$sleep_time)]
+
+# Plot my sleeping through date
+library(ggplot2)
+plot1 <- ggplot(df, aes(Dates, sleep_time)) + geom_line() + geom_point()
+
+```
+
+### Let's see it 
+```{r}
+df
+```
+
+
+What date did I sleep most?
+
+``` {r}
+most_sleeping_date
+```
+## Let's see the plot
+
+``` {r}
+plot1
+```

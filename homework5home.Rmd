@@ -38,6 +38,8 @@ colleges_remaining <- percent(nrow(df_new)/nrow(df))
 df_num <- df_new %>% keep(is.numeric) %>% pivot_longer(names_to='key', values_to ='value', -npt)
 
 plot1 <- ggplot(df_num, aes(x=value, y=npt)) + geom_point(alpha=.2,size=1) + facet_wrap(~key, scales='free') 
+#3. 
+coef <- df_num %>% group_by(key) %>% summarise(coefficient = cor(npt, value, use='complete.obs')) %>% mutate(rank=dense_rank(1-abs(coefficient))) %>% arrange(rank)
 ```
 
 ## Questions
@@ -52,3 +54,11 @@ Percentage of colleges remaining: `r colleges_remaining`
 ```{r, fig.width=15,fig.height=12}
 plot1
 ```
+
+3. What numeric variables have the strongest linear correlation with npt?
+
+Correlation between numeric variables and npt
+
+`r kable(coef)`
+
+#### 4. Although npt4_priv and npt4_pub has the coefficient 1.0, they are practically the same as npt, so we are not going to pick them. Instead the public is a better choice. Next one could either be actcm25 or actcm75. They both represent act score and has almost the same coefficient. The final one should be md_earn_wne_p8 cause they have the highest coefficient among the three md_earn.

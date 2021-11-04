@@ -1,0 +1,135 @@
+---
+title: "Tic Tac Toe Simulation"
+author: "Daniel Nguyen"
+date: "10/21/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Welcome to the tictactoe game. In this simple simulation, we are going to see if our strategies work out in the game. Two players: one will randomly choose his move (P1) and one will follow the strategies(P2). Let's see the win rate of player 2 after the first 3 moves
+
+Tic tac toe board:
+
+| 7 | 8 | 9 |
+
+| 4 | 5 | 6 |
+
+| 1 | 2 | 3 |
+
+### Strategies:
+
+1) Formula: Player2 = Player1 + 1. For example: If player 1 picks 1, player 2 will pick 2 in his next move. If player 1 pick 9, then player 2 will go back to 1. If the number has already been taken, the next one will be chosen and so on.
+
+2) Player 2 will pick the largest number on the board for his move.
+
+### Setup
+
+```{r}
+library(dplyr)
+library(scales)
+library(knitr)
+set.seed(10)
+
+
+
+# function for player 2 to move 
+p2_move <- function(strategy, pools, p1_move) {
+  if (strategy == 1){
+    p2_moving <- p1_move + 1
+    while (!(p2_moving %in% pools)) {
+      if (p2_moving <= 9){
+        p2_moving <- p2_moving + 1
+      }else{
+        p2_moving <- 1
+      }
+    }
+  }
+  else if (strategy == 2){
+    p2_moving <- max(pools)
+  }
+  return(p2_moving)
+}
+
+# First 3 moves for each player
+play <- function(time, strategy){
+  pools <- c(1,2,3,4,5,6,7,8,9)
+  #first move
+  p1_first_move <- sample(pools,1)
+  pools <- pools[pools != p1_first_move]
+  p2_first_move <- p2_move(strategy, pools,p1_first_move)
+  pools <- pools[pools != p2_first_move]
+  
+  #second_move
+  p1_second_move <- sample(pools,1)
+  pools <- pools[pools != p1_second_move]
+  p2_second_move <- p2_move(strategy, pools,p1_second_move)
+  pools <- pools[pools != p2_second_move]
+  
+  #third_move
+  p1_third_move <- sample(pools,1)
+  pools <- pools[pools != p1_third_move]
+  p2_third_move <- p2_move(strategy, pools, p1_third_move)
+  pools <- pools[pools != p2_third_move]
+  
+  #p1 and p2 moves:
+  p1 <- c(p1_first_move, p1_second_move, p1_third_move)
+  p2 <- c(p2_first_move, p2_second_move, p2_third_move)
+  row <- data.frame("time"=time,"player1"=p1, "player2"=p2)
+  return(row)
+}
+
+# Check whether or not there is winner. This is used for creating another winner column for our dataframe
+win_check <- function(player1,player2) {
+  win_list <- c(123,132,213,231,312,321,
+                456,465,546,564,645,654,
+                789,798,879,897,978,987,
+                147,174,417,471,741,714,
+                258,285,528,582,825,852,
+                369,396,639,693,936,963,
+                159,195,519,591,915,951,
+                357,375,537,573,735,753)
+  if(player1 %in% win_list){
+    return('P1')
+  }else if(player2 %in% win_list){
+    return('P2')
+  }else{
+    return('Draw')
+  }
+}
+
+# Game function. Run the game function to create the dataframe
+game <- function(time=1:1000, strategy){
+  library(dplyr)
+  df <- data.frame()
+  for (i in time){
+    df <- rbind(df, play(i, strategy))
+  }
+  # Group and Summarise player 1 and player 2 moves
+  df <- df %>% group_by(time) %>% summarise(player1=paste(player1, collapse = ''), player2=paste(player2, collapse = ''))
+  
+  # Convert to numeric value
+  df$player1 <- as.numeric(df$player1)
+  df$player2 <- as.numeric(df$player2)
+  df$winner <- mapply(FUN = win_check, player1=df$player1, player2=df$player2)
+  return(df)
+}
+```
+
+## Game 1:
+```{r}
+df <- game(strategy = 1)
+result <- df %>% group_by(winner) %>% summarise(total_win=n()) %>% mutate(win_rate = percent(total_win/sum(total_win))) %>% filter(winner=='P2') %>% select(win_rate)
+```
+
+The win rate of player 2 will be `r result`. Pretty low, we shouldn't follow this strategy I guess
+
+## Game 2:
+```{r}
+df <- game(strategy = 2)
+result <- df %>% group_by(winner) %>% summarise(total_win=n()) %>% mutate(win_rate = percent(total_win/sum(total_win))) %>% filter(winner=='P2') %>% select(win_rate)
+```
+
+The win rate of player 2 will be `r result`. Pretty high compares to the first strategy. Maybe we should do it 
